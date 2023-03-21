@@ -5,7 +5,8 @@ import pandas as pd
 
 # set the directory paths
 IMAGES_DIR = 'images-sorted'
-SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+# SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__)) # use the dataset is in the same directory as the script
+SCRIPT_DIR = os.getcwd() # use this if dataset is in the current working directory
 
 # set INDENT to None to create a single line JSON file
 INDENT = 1
@@ -45,6 +46,8 @@ df_new = pd.DataFrame(columns=df.columns)
 
 # iterate through the directories
 directories = os.listdir(IMAGES_DIR)
+# sort the directories
+directories = sorted(directories)
 print(f'Total number of directories: {len(directories)}')
 
 for directory in directories:
