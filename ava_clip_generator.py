@@ -28,7 +28,13 @@ df.sort_index(inplace=True)
 
 model, _, preprocess = open_clip.create_model_and_transforms(model_name=MODEL_NAME, pretrained=PRETRAINED)
 tokenizer = open_clip.get_tokenizer(MODEL_NAME)
-device = "cuda" if torch.cuda.is_available() else "cpu"
+
+if torch.cuda.is_available():
+    device = 'cuda'
+else:
+    device = 'cpu'
+    print('CUDA is not available. Using CPU instead.')
+
 model = model.to(device)
 
 # function to generate the embeddings
