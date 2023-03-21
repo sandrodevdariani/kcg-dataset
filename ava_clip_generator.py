@@ -48,6 +48,7 @@ def generate_embeddings(file_name,dir_name):
 
 # iterate through the directories
 directories = os.listdir(IMAGES_DIR)
+directories = sorted(directories)
 print(f'Total number of directories: {len(directories)}')
 
 for directory in directories:
