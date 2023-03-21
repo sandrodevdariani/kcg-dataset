@@ -17,7 +17,7 @@ INDENT = 1 # indent level for the JSON file
 # read AVA.json into a dataframe
 df = pd.read_json('AVA.json', orient='records')
 df['ClipModel'] = MODEL_NAME
-df['ClipPretrained'] = 'OpenClip'
+df['ClipPretrained'] = PRETRAINED
 df['ClipVectorSize'] = None
 df['ClipVector'] = None
 # set the index to the ImageId
