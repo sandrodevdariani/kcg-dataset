@@ -4,7 +4,8 @@ import shutil
 IMAGE_DIR = 'images-extracted'
 OUTPUT_DIR = 'images-sorted'
 ACTION = 'copy' # 'copy' or 'move' the files
-SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+# SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__)) # use the dataset is in the same directory as the script
+SCRIPT_DIR = os.getcwd() # use this if dataset is in the current working directory
 
 # create output directory
 if not os.path.exists(OUTPUT_DIR):
