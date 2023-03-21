@@ -3,7 +3,7 @@ import shutil
 
 IMAGE_DIR = 'images-extracted'
 OUTPUT_DIR = 'images-sorted'
-ACTION = 'move' # 'copy' or 'move' the files
+ACTION = 'copy' # 'copy' or 'move' the files
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # create output directory
