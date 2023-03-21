@@ -63,11 +63,20 @@ for directory in directories:
 
     for index, file in enumerate(files):
         # print the progress
-        print(f"Processing file {index+1}/{total_files}", end='\r')
+        print(f"Processing {file} {index+1}/{total_files}", end='\r')
         # check if the file is an image
-        if not file.endswith('.jpg') and not file.endswith('.png'):
+        if file.split('.')[-1] not in ['jpg', 'jpeg', 'png']:
             continue
 
+        # try to open the image
+        try:
+            # check if the image is corrupt
+            Image.open(os.path.join(IMAGE_DIR, directory, file)).verify()
+        except:
+            # write the error to a file
+            with open('errors-clip.txt', 'a') as f:
+                f.write(f'{file} {directory}')
+        
         # generate the embeddings
         emb = generate_embeddings(file,directory)
 
