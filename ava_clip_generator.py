@@ -9,7 +9,8 @@ PRETRAINED = 'openai'
 
 # set the directory paths
 IMAGES_DIR = 'images-sorted' # directory that contains the sorted images
-SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+# SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__)) # use the dataset is in the same directory as the script
+SCRIPT_DIR = os.getcwd() # use this if dataset is in the current working directory
 IMAGE_DIR = os.path.join(SCRIPT_DIR, IMAGES_DIR)
 
 INDENT = 1 # indent level for the JSON file
