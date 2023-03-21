@@ -16,11 +16,16 @@ To run the script
 
 `python3 ~/repo/kcg-datasets/ava-tools/ava-json-generator.py`
 
-3 - `clip_generator.py` adds the clip vectors for each image in the corresponding JSON file. This script uses AVA.json file generated from `ava_json_generator.py`.
+3 - `ava_clip_generator.py` adds the clip vectors for each image in the corresponding JSON file. This script uses AVA.json file generated from `ava_json_generator.py`.
 To run the script
 
 `cd AVA`
 
-`python3 ~/repo/kcg-datasets/ava-tools/clip-generator.py`
+`python3 ~/repo/kcg-datasets/ava-tools/ava_clip-generator.py`
 
-4 - `zip_generator.py` generates zip files from the given directories.
+4 - `zip_generator.py` generates zip files from the given sorted image directories.
+To run the script
+
+`cd AVA`
+
+`python3 ~/repo/kcg-datasets/ava-tools/zip-generator.py`
