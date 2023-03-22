@@ -5,7 +5,7 @@ import open_clip
 import pandas as pd
 
 MODEL_NAME = 'ViT-L-14'
-PRETRAINED = 'openai'
+PRETRAINED = 'laion2b_s32b_b82k'
 
 # set the directory paths
 IMAGES_DIR = 'images-sorted' # directory that contains the sorted images
