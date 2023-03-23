@@ -1,8 +1,9 @@
 import os
 import torch
-from PIL import Image
 import open_clip
 import pandas as pd
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 MODEL_NAME = 'ViT-L-14'
 PRETRAINED = 'laion2b_s32b_b82k'
@@ -58,7 +59,10 @@ for directory in directories:
     # iterate through the files in the directory
     files = os.listdir(os.path.join(IMAGES_DIR, directory))
     total_files = len(files)
-
+    # remove json files
+    files = [file for file in files if file.split('.')[-1] in ALLOWED_EXTENSIONS]
+    # sort the files by name
+    files = sorted(files, key=lambda x: int(x.split('.')[0]))
     # create an empty dataframe
     df_new = pd.DataFrame(columns=df.columns)
 
@@ -66,8 +70,6 @@ for directory in directories:
         # check file extension
         ext = file.split('.')[-1]
         if ext not in ALLOWED_EXTENSIONS:
-            if file.lower().endswith('clip.json'):
-                os.remove(os.path.join(IMAGE_DIR, directory, file))
             continue
 
         # print the progress
