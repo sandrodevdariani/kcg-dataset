@@ -8,6 +8,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 MODEL_NAME = 'ViT-L-14'
 PRETRAINED = 'laion2b_s32b_b82k'
 ALLOWED_EXTENSIONS = ['jpg', 'png']
+DEBUG = True
 
 # set the directory paths
 IMAGES_DIR = 'images-sorted' # directory that contains the sorted images
@@ -53,7 +54,7 @@ def generate_embeddings(file_name,dir_name):
 directories = os.listdir(IMAGES_DIR)
 directories = sorted(directories)
 print(f'Total number of directories: {len(directories)}')
-
+end = '\n' if DEBUG else '\r'
 for directory in directories:
     print(f'Processing directory: {directory}')
     # iterate through the files in the directory
@@ -73,7 +74,7 @@ for directory in directories:
             continue
 
         # print the progress
-        print(f"Processing {file} {index+1}/{total_files}", end='\r')
+        print(f"Processing {file} {index+1}/{total_files}", end=end)
 
         # try to open the image
         try:
