@@ -7,7 +7,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 IMAGE_DIR = 'images-extracted'
 OUTPUT_DIR = 'images-sorted'
 ACTION = 'copy' # 'copy' or 'move' the files
-ALLOWED_EXTENSIONS = ['jpg', 'png']
+ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png']
 
 
 # SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__)) # use the dataset is in the same directory as the script
@@ -42,6 +42,11 @@ for file in files_all:
     path = os.path.join(IMAGE_DIR, file)
     try:
         im = Image.open(path)
+        # get image format
+        format = im.format
+        if format.lower() not in ALLOWED_EXTENSIONS:
+            print(f'Invalid extension: {file}')
+            continue
         im.verify()     
     except Exception as e:
         print(e)
@@ -77,12 +82,8 @@ for index,file in enumerate(files):
     # print the progress
     print(f"Processing {file} {index+1}/{total_images}", end='\r')
     path = os.path.join(IMAGE_DIR, file)
-    # read in the file
-    with open(path, 'rb') as f:
-        img = f.read()
-
     # get the size of the file
-    size = len(img)
+    size = os.path.getsize(path)
     total_bytes += size
 
     # if the total size is greater than 500 MB
