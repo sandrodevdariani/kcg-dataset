@@ -118,5 +118,6 @@ path = os.path.join(SCRIPT_DIR, 'errors.txt')
 if os.path.exists(path):
     os.remove(path)
 
+print(f'{len(df_not_found)} images not found and written to errors.txt')
 with open(path, 'w') as f:
     f.write(df_not_found.loc[:, ['Index', 'ImageId']].to_string(header=True, index=False))
