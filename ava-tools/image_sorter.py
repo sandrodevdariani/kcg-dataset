@@ -1,7 +1,7 @@
 import os
 import shutil
-from PIL import Image
-
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 IMAGE_DIR = 'images-extracted'
 OUTPUT_DIR = 'images-sorted'
