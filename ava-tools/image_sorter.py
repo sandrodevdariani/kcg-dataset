@@ -1,5 +1,6 @@
 import os
 import shutil
+import filetype
 from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -39,14 +40,24 @@ for file in files_all:
 
     # get the full path of the file
     path = os.path.join(IMAGE_DIR, file)
-    # open the file
     try:
-        img = Image.open(path)
-        img.verify()
-    except:
+        im = Image.open(path)
+        im.verify()     
+    except Exception as e:
+        print(e)
         print(f'Invalid image: {file}')
         continue
 
+    if not filetype.is_image(path):
+        print(f'Invalid image: {file}')
+        continue
+
+    # check file size
+    size = os.path.getsize(path)
+    if size == 0:
+        print(f'Invalid image: {file}')
+        continue
+    
     # add the file to the list
     files_images.append(file)
 
