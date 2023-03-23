@@ -7,7 +7,7 @@ import pandas as pd
 IMAGES_DIR = 'images-sorted'
 # SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__)) # use the dataset is in the same directory as the script
 SCRIPT_DIR = os.getcwd() # use this if dataset is in the current working directory
-
+ALLOWED_EXTENSIONS = ['jpg', 'png']
 # set INDENT to None to create a single line JSON file
 INDENT = 1
 
@@ -56,6 +56,10 @@ for directory in directories:
     print(f'Processing directory: {directory}')
     # iterate through the files in the directory
     files = os.listdir(os.path.join(IMAGES_DIR, directory))
+    # remove files other than images
+    files = [file for file in files if file.split('.')[-1] in ALLOWED_EXTENSIONS]
+    # sort the files
+    files = sorted(files, key=lambda x: int(x.split('.')[0]))
     total_files = len(files)
 
     # create an empty dataframe
