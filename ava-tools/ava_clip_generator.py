@@ -43,9 +43,9 @@ else:
 model = model.to(device)
 
 # function to generate the embeddings
-def generate_embeddings(img):
+def generate_embeddings(file_name,dir_name):
     with torch.no_grad():
-        image = preprocess(img).unsqueeze(0).to(device)
+        image = preprocess(Image.open(os.path.join(IMAGE_DIR, dir_name, file_name))).unsqueeze(0).to(device)
         emb = model.encode_image(image).cpu().detach().numpy()
     return emb
 
@@ -86,7 +86,7 @@ for directory in directories:
             continue
         
         # generate the embeddings
-        emb = generate_embeddings(img)
+        emb = generate_embeddings(file, directory)
 
         # get the image id
         image_id = int(file.split('.')[0])
