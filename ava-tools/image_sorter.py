@@ -1,7 +1,5 @@
 import os
 import shutil
-import PIL
-import cv2 as cv
 from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -43,6 +41,7 @@ def remove_all_exif_data(image_path):
     
 # iterate through the files
 image_count = 0
+
 print("Removing EXIF data from images...")
 for file in files_all:
     image_count += 1
@@ -61,7 +60,7 @@ for file in files_all:
     statfile = os.stat(path)
     filesize = statfile.st_size
     if filesize == 0:
-        print("IMAGE SIZE ZERO: " +path)
+        print("IMAGE SIZE ZERO:",path)
         continue
     
     try: 
