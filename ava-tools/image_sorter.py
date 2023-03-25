@@ -1,13 +1,14 @@
 import os
 import shutil
-import filetype
+import PIL
+import cv2 as cv
 from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 IMAGE_DIR = 'images-extracted'
 OUTPUT_DIR = 'images-sorted'
 ACTION = 'copy' # 'copy' or 'move' the files
-ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png']
+ALLOWED_EXTENSIONS = ['jpg', 'png']
 
 
 # SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__)) # use the dataset is in the same directory as the script
@@ -29,8 +30,24 @@ else:
 files_all = os.listdir(IMAGE_DIR)
 files_images = []
 
+
+def remove_all_exif_data(image_path):
+    with Image.open(image_path) as img:
+        # Remove all Exif data
+        img_without_exif = Image.new(img.mode, img.size)
+        img_without_exif.putdata(list(img.getdata()))
+        
+        # Save the image without Exif data
+        img_without_exif.save(image_path)
+
+    
 # iterate through the files
+image_count = 0
+print("Removing EXIF data from images...")
 for file in files_all:
+    image_count += 1
+    if image_count % 1000 == 0 :
+        print("Images Processed: ", image_count)
     # get the extension of the file
     ext = file.split('.')[-1]
     # check if the extension is allowed
@@ -40,29 +57,21 @@ for file in files_all:
 
     # get the full path of the file
     path = os.path.join(IMAGE_DIR, file)
-    try:
-        im = Image.open(path)
-        # get image format
-        format = im.format
-        if format.lower() not in ALLOWED_EXTENSIONS:
-            print(f'Invalid extension: {file}')
-            continue
-        im.verify()     
-    except Exception as e:
-        print(e)
-        print(f'Invalid image: {file}')
-        continue
-
-    if not filetype.is_image(path):
-        print(f'Invalid image: {file}')
-        continue
-
-    # check file size
-    size = os.path.getsize(path)
-    if size == 0:
-        print(f'Invalid image: {file}')
+ 
+    statfile = os.stat(path)
+    filesize = statfile.st_size
+    if filesize == 0:
+        print("IMAGE SIZE ZERO: " +path)
         continue
     
+    try: 
+		#remove exif data
+        remove_all_exif_data(path)
+    except Exception as e:
+        print(e)
+        print("IMAGE CORRUPT:",path)
+        continue
+
     # add the file to the list
     files_images.append(file)
 
@@ -82,8 +91,12 @@ for index,file in enumerate(files):
     # print the progress
     print(f"Processing {file} {index+1}/{total_images}", end='\r')
     path = os.path.join(IMAGE_DIR, file)
+    # read in the file
+    with open(path, 'rb') as f:
+        img = f.read()
+
     # get the size of the file
-    size = os.path.getsize(path)
+    size = len(img)
     total_bytes += size
 
     # if the total size is greater than 500 MB
