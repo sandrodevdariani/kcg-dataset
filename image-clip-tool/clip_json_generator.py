@@ -82,10 +82,11 @@ def clip_json_generator(input_directory, output_directory):
                     json.dump(image_data, f, indent=4)
 
 #Change input_directory and output_directory paths with Correct paths
+#Existing input_directory path is from kcg-dataset/test-data. To run this code, clone kcg-dataset and change Working Directory.
 
 if __name__ == "__main__":
-    input_directory = '/path/to/input/directory'
-    output_directory = '/path/to/output/directory'
+    input_directory = './test_data'
+    output_directory = './output'
     clip_json_generator(input_directory, output_directory)
 
 # Also, you can run the script using the command:
