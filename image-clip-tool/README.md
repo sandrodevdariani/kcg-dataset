@@ -9,16 +9,18 @@ To run this script, you need to have the following packages installed:
 * Pillow
 * Torch
 * OpenAI-CLIP
+
+
 You can install these packages using the following command:
 
-!pip install pillow torch openai-clip
+`!pip install pillow torch openai-clip`
 
 ## Usage
 
 To run the script, execute the following command:
 
 
-!python clip_json_generator.py /path/to/input/directory /path/to/output/directory
+`!python clip_json_generator.py /path/to/input/directory /path/to/output/directory`
 
 
 
