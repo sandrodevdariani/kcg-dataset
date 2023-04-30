@@ -13,6 +13,7 @@ from tqdm.auto import tqdm
 
 
 model_name = "ViT-L/14"
+batch_size = 16
 
 def clip_json_generator(input_directory, output_directory):
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -25,18 +26,20 @@ def clip_json_generator(input_directory, output_directory):
             hasher.update(buf)
         return hasher.hexdigest()
 
-    def get_clip_vector(image_path):
-        try:
-            image = Image.open(image_path)
-            image_input = preprocess(image).unsqueeze(0).to(device)
-            with torch.no_grad():
-                features = model.encode_image(image_input)
-            normalized_features = features / features.norm(dim=-1, keepdim=True)
-            clip_vector = normalized_features.cpu().numpy().tolist()
-            return clip_vector
-        except FileNotFoundError:
-            print(f"Image file not found at {image_path}. Skipping...")
-            return None
+    def process_batch(image_paths):
+        images = []
+        for image_path in image_paths:
+            try:
+                image = Image.open(image_path)
+                images.append(preprocess(image))
+            except FileNotFoundError:
+                print(f"Image file not found at {image_path}. Skipping...")
+
+        image_inputs = torch.stack(images).to(device)
+        with torch.no_grad():
+            features = model.encode_image(image_inputs)
+        normalized_features = features / features.norm(dim=-1, keepdim=True)
+        return normalized_features.cpu().numpy().tolist()
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
@@ -51,34 +54,35 @@ def clip_json_generator(input_directory, output_directory):
 
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
             image_members = [member for member in zip_ref.infolist() if member.filename.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp'))]
-            for member in tqdm(image_members, desc="Processing images in zip file"):
 
-                    # Extract image from the zip file
+            for i in tqdm(range(0, len(image_members), batch_size), desc="Processing image batches"):
+                batch_members = image_members[i:i + batch_size]
+
+                # Extract images and save them
+                extracted_image_paths = []
+                for member in batch_members:
                     with zip_ref.open(member) as img_file:
                         img_data = img_file.read()
                         img = Image.open(BytesIO(img_data))
                         img.save(f'extracted_{os.path.basename(member.filename)}')
+                        extracted_image_paths.append(f'extracted_{os.path.basename(member.filename)}')
 
-                    # Calculate file hash
-                    file_hash = get_file_hash(f'extracted_{os.path.basename(member.filename)}')
+                # Generate CLIP vectors for the batch
+                clip_vectors = process_batch(extracted_image_paths)
 
-                    # Generate CLIP vector
-                    clip_vector = get_clip_vector(f'extracted_{os.path.basename(member.filename)}')
-
-                    # Add the data to the list (if the CLIP vector is not None)
-                    if clip_vector is not None:
-                        image_data.append({
-                            'zipfile': os.path.basename(zip_file_path),
-                            'filename': os.path.basename(member.filename),
-                            'file_hash': file_hash,
-                            'clip_model': model_name,
-                            'clip_vector': clip_vector
-                        })
-                    else:
-                        print(f"Skipping image {member.filename} due to missing file.")
+                # Process image data
+                for j, member in enumerate(batch_members):
+                    file_hash = get_file_hash(extracted_image_paths[j])
+                    image_data.append({
+                        'zipfile': os.path.basename(zip_file_path),
+                        'filename': os.path.basename(member.filename),
+                        'file_hash': file_hash,
+                        'clip_model': model_name,
+                        'clip_vector': clip_vectors[j]
+                    })
 
                     # Clean up the extracted image
-                    os.remove(f'extracted_{os.path.basename(member.filename)}')
+                    os.remove(extracted_image_paths[j])
 
         # Write the image_data list to a separate JSON file for each zip file
         output_json_file = os.path.join(output_directory, f"{os.path.splitext(file)[0]}_clip_vectors.json")
@@ -94,6 +98,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     clip_json_generator(args.input_directory, args.output_directory)
+
 
 
 
