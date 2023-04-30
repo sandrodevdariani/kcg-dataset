@@ -44,7 +44,7 @@ def clip_json_generator(input_directory, output_directory):
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    zip_files = [file for root, _, files in os.walk(input_directory) for file in files if file.endswith('.zip')]
+    zip_files = [os.path.join(root, file) for root, _, files in os.walk(input_directory) for file in files if file.endswith('.zip')]
     total_zip_files = len(zip_files)
     print("Start process")
 
