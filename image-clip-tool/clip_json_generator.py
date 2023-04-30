@@ -9,6 +9,8 @@ import clip
 import torch
 import argparse
 from tqdm import tqdm
+from tqdm.auto import tqdm
+
 
 model_name = "ViT-L/14"
 
@@ -48,8 +50,9 @@ def clip_json_generator(input_directory, output_directory):
         image_data = []
 
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-            for member in zip_ref.infolist():
-                if member.filename.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')):
+            image_members = [member for member in zip_ref.infolist() if member.filename.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp'))]
+            for member in tqdm(image_members, desc="Processing images in zip file"):
+
                     # Extract image from the zip file
                     with zip_ref.open(member) as img_file:
                         img_data = img_file.read()
