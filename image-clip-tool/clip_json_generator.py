@@ -87,7 +87,10 @@ def clip_json_generator(input_directory, output_directory):
 if __name__ == "__main__":
     input_directory = './test_data'
     output_directory = './output'
+    print("Starting image processing...")
     clip_json_generator(input_directory, output_directory)
+    print("Image processing finished!")
+
 
 # Also, you can run the script using the command:
 #python clip_json_generator.py /path/to/input/directory /path/to/output/directory
