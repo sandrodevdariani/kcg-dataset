@@ -4,6 +4,7 @@ import json
 from PIL import Image
 import clip
 import torch
+import argparse
 
 model_name = "ViT-L/14"
 
@@ -66,6 +67,9 @@ def clip_json_generator(input_directory, output_directory):
 
 
 if __name__ == "__main__":
-    input_directory = './input/Image-scraper-pixel-art-allimages'
-    output_directory = './output/clip_json'
-    clip_json_generator(input_directory, output_directory)
+    parser = argparse.ArgumentParser(description="Generate CLIP vectors for images in a directory.")
+    parser.add_argument("input_directory", help="Path to the input directory containing the images.")
+    parser.add_argument("output_directory", help="Path to the output directory where the JSON file will be saved.")
+    args = parser.parse_args()
+
+    clip_json_generator(args.input_directory, args.output_directory)
