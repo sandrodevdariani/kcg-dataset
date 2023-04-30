@@ -48,7 +48,7 @@ def clip_json_generator(input_directory, output_directory):
 
                 with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
                     for member in zip_ref.infolist():
-                        if member.filename.lower().endswith(('.png', '.jpg')):
+                        if member.filename.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')):
                             # Extract image from the zip file
                             with zip_ref.open(member) as img_file:
                                 img_data = img_file.read()
