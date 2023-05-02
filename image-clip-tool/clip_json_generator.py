@@ -128,6 +128,7 @@ parser.add_argument('output_directory', type=str, help='Path to directory where 
 parser.add_argument('batch_size', type=int)
 
 args = parser.parse_args()
+  
+clip_json_generator(args.input_directory, args.output_directory, args.batch_size)
 
-clip_json_generator(args.input_directory, args.output_directory)    
 
