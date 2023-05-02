@@ -14,7 +14,6 @@ import argparse
 
 
 model_name = "ViT-L/14"
-batch_size = 16
 
 
 def open_zip_to_ram(zip_path):
