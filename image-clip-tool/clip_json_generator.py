@@ -7,6 +7,10 @@ import clip
 import torch
 import argparse
 from tqdm import tqdm
+import io
+import time
+import argparse
+
 
 
 model_name = "ViT-L/14"
@@ -65,29 +69,42 @@ def clip_json_generator(input_directory, output_directory):
         file_data = open_zip_to_ram(zip_file_path)
 
         image_data = []
-        for file_name, binary_data in file_data.items():
-            if file_name.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')):
-                clip_data = process_image(binary_data)
-                if clip_data:
-                    image_data.append({
-                        'zipfile': os.path.basename(zip_file_path),
-                        'filename': file_name,
-                        'file_hash': clip_data['hash'],
-                        'clip_model': model_name,
-                        'clip_vector': clip_data['vector']
-                    })
+        total_images = len(file_data)
+        processed_images = 0
+        start_time = time.time()
+        for file_name, binary_data in tqdm(file_data.items(), desc="Processing images", total=total_images):
+            try:
+                if file_name.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')):
+                    clip_data = process_image(binary_data)
+                    if clip_data:
+                        image_data.append({
+                            'zipfile': os.path.basename(zip_file_path),
+                            'filename': file_name,
+                            'file_hash': clip_data['hash'],
+                            'clip_model': model_name,
+                            'clip_vector': clip_data['vector']
+                        })
+                    processed_images += 1
+            except Exception as e:
+                print(f"Error processing image data: {e}")
 
-        output_json_file = os.path.join(output_directory, f"{os.path.splitext(file)[0]}_clip_vectors.json")
+        end_time = time.time()
+        total_time = end_time - start_time
+        mb_s = sum(len(binary_data) for binary_data in file_data.values()) / (total_time * 1024 * 1024)
+        print(f"Processed {processed_images} images in {total_time:.2f} seconds. ({mb_s:.2f} MB/s)")
+
+        output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}_clip_vectors.json")
         with open(output_json_file, 'w') as f:
             json.dump(image_data, f, indent=4)
 
     print("Finish process")
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate CLIP vectors for images in a directory.")
-    parser.add_argument("input_directory", help="Path to the input directory containing the images.")
-    parser.add_argument("output_directory", help="Path to the output directory where the JSON file will be saved.")
-    args = parser.parse_args()
+parser = argparse.ArgumentParser(description='Generate CLIP vectors for images in a directory of zip files.')
+parser.add_argument('input_directory', type=str, help='Path to directory containing zip files')
+parser.add_argument('output_directory', type=str, help='Path to directory where output JSON files will be saved')
 
-    clip_json_generator(args.input_directory, args.output_directory)
+args = parser.parse_args()
+
+clip_json_generator(args.input_directory, args.output_directory)    
+
