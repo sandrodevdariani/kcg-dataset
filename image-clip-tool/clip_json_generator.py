@@ -38,24 +38,21 @@ def open_zip_to_ram(zip_path):
     return file_data
 
 
-def clip_json_generator(input_directory, output_directory):
+def clip_json_generator(input_directory, output_directory, batch_size):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load(model_name, device=device)
 
-    def process_image(image_data):
+    def process_images(image_data_list):
         try:
-            image = Image.open(io.BytesIO(image_data)).convert("RGB")
-            image_input = preprocess(image).unsqueeze(0).to(device)
+            images = [Image.open(io.BytesIO(image_data)).convert("RGB") for image_data in image_data_list]
+            image_inputs = torch.stack([preprocess(image) for image in images]).to(device)
             with torch.no_grad():
-                image_features = model.encode_image(image_input)
-            image_hash = hashlib.sha256(image_data).hexdigest()
-            return {
-                'hash': image_hash,
-                'vector': image_features.cpu().numpy().tolist()
-            }
+                image_features = model.encode_image(image_inputs)
+            image_hashes = [hashlib.sha256(image_data).hexdigest() for image_data in image_data_list]
+            return [{'hash': h, 'vector': v.cpu().numpy().tolist()} for h, v in zip(image_hashes, image_features)]
         except Exception as e:
             print(f"Error processing image data: {e}")
-            return None
+            return [None] * len(image_data_list)
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
@@ -68,25 +65,46 @@ def clip_json_generator(input_directory, output_directory):
         zip_file_path = os.path.join(input_directory, file)
         file_data = open_zip_to_ram(zip_file_path)
 
+
         image_data = []
         total_images = len(file_data)
         processed_images = 0
         start_time = time.time()
+
+        batch_data = []
         for file_name, binary_data in tqdm(file_data.items(), desc="Processing images", total=total_images):
-            try:
-                if file_name.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')):
-                    clip_data = process_image(binary_data)
-                    if clip_data:
-                        image_data.append({
-                            'zipfile': os.path.basename(zip_file_path),
-                            'filename': file_name,
-                            'file_hash': clip_data['hash'],
-                            'clip_model': model_name,
-                            'clip_vector': clip_data['vector']
-                        })
-                    processed_images += 1
-            except Exception as e:
-                print(f"Error processing image data: {e}")
+            if file_name.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')):
+                batch_data.append(binary_data)
+
+                if len(batch_data) == batch_size:
+                    clip_data_list = process_images(batch_data)
+                    for clip_data, binary_data in zip(clip_data_list, batch_data):
+                        if clip_data:
+                            image_data.append({
+                                'zipfile': os.path.basename(zip_file_path),
+                                'filename': file_name,
+                                'file_hash': clip_data['hash'],
+                                'clip_model': model_name,
+                                'clip_vector': clip_data['vector']
+                            })
+                    processed_images += len(batch_data)
+                    batch_data = []
+
+        if batch_data:
+            clip_data_list = process_images(batch_data)
+            for clip_data, binary_data in zip(clip_data_list, batch_data):
+                if clip_data:
+                    image_data.append({
+                        'zipfile': os.path.basename(zip_file_path),
+                        'filename': file_name,
+                        'file_hash': clip_data['hash'],
+                        'clip_model': model_name,
+                        'clip_vector': clip_data['vector']
+                    })
+            processed_images += len(batch_data)
+
+
+
 
         end_time = time.time()
         total_time = end_time - start_time
@@ -99,10 +117,15 @@ def clip_json_generator(input_directory, output_directory):
 
     print("Finish process")
 
+ 
+
+
+
 
 parser = argparse.ArgumentParser(description='Generate CLIP vectors for images in a directory of zip files.')
 parser.add_argument('input_directory', type=str, help='Path to directory containing zip files')
 parser.add_argument('output_directory', type=str, help='Path to directory where output JSON files will be saved')
+parser.add_argument('batch_size', type=int)
 
 args = parser.parse_args()
 
