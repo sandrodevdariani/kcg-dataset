@@ -124,11 +124,17 @@ def clip_json_generator(input_directory, output_directory, batch_size):
         total_time = end_time - start_time
         clip_time = total_time - unzip_time
 
+        total_mb = sum(len(binary_data) for binary_data in file_data.values()) / (1024 * 1024)
+        total_gb = total_mb / 1024
         mb_s = sum(len(binary_data) for binary_data in file_data.values()) / (clip_time * 1024 * 1024)
         img_s = processed_images / clip_time
 
         print(f"Reading/uncompressing zip files took {unzip_time:.2f} seconds.")
         print(f"Processed {processed_images} images in {clip_time:.2f} seconds. ({img_s:.2f} images/s, {mb_s:.2f} MB/s)")
+        print(f"Processed {processed_images} images ({total_gb:.2f} GB) in {clip_time:.2f} seconds. ({img_s:.2f} images/s, {mb_s:.2f} MB/s) | Total GB processed: {total_gb:.2f}")
+
+
+        
 
         output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}.json")
         with open(output_json_file, 'w') as f:
