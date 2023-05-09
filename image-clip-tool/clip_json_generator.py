@@ -130,7 +130,7 @@ def clip_json_generator(input_directory, output_directory, batch_size):
         print(f"Reading/uncompressing zip files took {unzip_time:.2f} seconds.")
         print(f"Processed {processed_images} images in {clip_time:.2f} seconds. ({img_s:.2f} images/s, {mb_s:.2f} MB/s)")
 
-        output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}_clip_vectors.json")
+        output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}.json")
         with open(output_json_file, 'w') as f:
             json.dump(image_data, f, indent=4)
 
@@ -142,7 +142,7 @@ def clip_json_generator(input_directory, output_directory, batch_size):
 
 
     print("Finish process")
-    
+
 '''
 parser = argparse.ArgumentParser(description='Generate CLIP vectors for images in a directory of zip files.')
 parser.add_argument('input_directory', type=str, help='Path to directory containing zip files')
