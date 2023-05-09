@@ -62,12 +62,14 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
                 'filename': file_name,
                 'file_hash': hash_value,
                 'clip_model': model_name,
-                'clip_vector': clip_vector
+                'clip_vector': clip_vector,
+                'path/filename': os.path.join(zip_file_path, '/', file_name)  # add the path/filename key-value pair
             })
 
     conversion_errors = [(idx, file_names[idx], error) for idx, error in conversion_errors]
 
     return image_data, len(batch_data), conversion_errors
+
 
 
 
@@ -90,6 +92,9 @@ def clip_json_generator(input_directory, output_directory, batch_size):
 
         unzip_end_time = time.time()
         unzip_time = unzip_end_time - unzip_start_time
+
+        # calculate zip file size in MB
+        zip_file_size = os.path.getsize(zip_file_path) / (1024 * 1024)  
 
         image_data = []
         total_images = len(file_data)
@@ -130,17 +135,16 @@ def clip_json_generator(input_directory, output_directory, batch_size):
         total_mb = sum(len(binary_data) for binary_data in file_data.values()) / (1024 * 1024)
         total_gb = total_mb / 1024
 
+        # calculate M/S
+        ms = zip_file_size / unzip_time
+
         print(f"Reading/uncompressing zip files took {unzip_time:.2f} seconds.")
         print(f"Processed {processed_images} images in {clip_time:.2f} seconds. ({img_s:.2f} images/s, {mb_s:.2f} MB/s)")
         print(f"Total GB processed: {total_gb:.2f} GB")
+        print(f"Zip file processed at {ms:.2f} MB/s")
 
         output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}.json")
         with open(output_json_file, 'w') as f:
-            json.dump(image_data, f, indent=4)
-
-        if errors:
-            error_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}_errors.txt")
-            with open(error_file, 'w') as f:
                 for error in errors:
                     f.write(f"{error[1]}: {error[2]}\n")
 
