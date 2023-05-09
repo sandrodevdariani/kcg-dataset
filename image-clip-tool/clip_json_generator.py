@@ -60,10 +60,10 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
             image_data.append({
                 'zipfile': os.path.basename(zip_file_path),
                 'filename': file_name,
+                'path/filename': os.path.join(zip_file_path, '/', file_name),
                 'file_hash': hash_value,
                 'clip_model': model_name,
-                'clip_vector': clip_vector,
-                'path/filename': os.path.join(zip_file_path, '/', file_name)  # add the path/filename key-value pair
+                'clip_vector': clip_vector
             })
 
     conversion_errors = [(idx, file_names[idx], error) for idx, error in conversion_errors]
