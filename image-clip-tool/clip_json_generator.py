@@ -142,7 +142,8 @@ def clip_json_generator(input_directory, output_directory, batch_size):
 
 
     print("Finish process")
-
+    
+'''
 parser = argparse.ArgumentParser(description='Generate CLIP vectors for images in a directory of zip files.')
 parser.add_argument('input_directory', type=str, help='Path to directory containing zip files')
 parser.add_argument('output_directory', type=str, help='Path to directory where output JSON files will be saved')
@@ -151,4 +152,4 @@ parser.add_argument('batch_size', type=int)
 args = parser.parse_args()
 
 clip_json_generator(args.input_directory, args.output_directory, args.batch_size)
-
+'''
