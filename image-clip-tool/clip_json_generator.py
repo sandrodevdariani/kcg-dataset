@@ -145,8 +145,13 @@ def clip_json_generator(input_directory, output_directory, batch_size):
 
         output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}.json")
         with open(output_json_file, 'w') as f:
+            json.dump(image_data, f, indent=4)
+        if errors:
+            error_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}_errors.txt")
+            with open(error_file, 'w') as f:
                 for error in errors:
                     f.write(f"{error[1]}: {error[2]}\n")
+
 
     print("Finish process")
 
