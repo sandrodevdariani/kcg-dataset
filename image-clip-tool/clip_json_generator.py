@@ -10,6 +10,8 @@ from tqdm import tqdm
 import io
 import time
 import argparse
+import threading
+
 
 model_name = "ViT-L/14"
 
@@ -70,8 +72,8 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
 
     return image_data, len(batch_data), conversion_errors
 
-
-
+def load_zip_to_ram_threaded(zip_file_path, file_data_dict):
+    file_data_dict[zip_file_path] = open_zip_to_ram(zip_file_path)
 
 def clip_json_generator(input_directory, output_directory, batch_size):
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -84,76 +86,93 @@ def clip_json_generator(input_directory, output_directory, batch_size):
     total_zip_files = len(zip_files)
     print(f"Processing {total_zip_files} zip files...")
 
-    for file in tqdm(zip_files, desc="Processing zip files"):
+    threads = {}
+    file_data_dict = {}
+
+    for i, file in enumerate(tqdm(zip_files, desc="Processing zip files")):
         unzip_start_time = time.time()
 
         zip_file_path = os.path.join(input_directory, file)
-        file_data = open_zip_to_ram(zip_file_path)
 
-        unzip_end_time = time.time()
-        unzip_time = unzip_end_time - unzip_start_time
+        if i > 0:
+            # Wait for the previous zip file to be loaded into memory
+            threads[previous_zip_file_path].join()
+            file_data = file_data_dict[previous_zip_file_path]
 
-        # calculate zip file size in MB
-        zip_file_size = os.path.getsize(zip_file_path) / (1024 * 1024)  
+            unzip_end_time = time.time()
+            unzip_time = unzip_end_time - unzip_start_time
 
-        image_data = []
-        total_images = len(file_data)
-        processed_images = 0
-        start_time = time.time()
+            # calculate zip file size in MB
+            zip_file_size = os.path.getsize(previous_zip_file_path) / (1024 * 1024)
 
-        batch_data = []
-        batch_file_names = []
-        errors = []
+            image_data = []
+            total_images = len(file_data)
+            processed_images = 0
+            start_time = time.time()
 
-        def process_batch(batch_data, batch_file_names):
-            nonlocal processed_images
-            batch_image_data, processed, conversion_errors = process_and_append_images(batch_data, batch_file_names, model, preprocess, device, zip_file_path)
-            image_data.extend(batch_image_data)
-            errors.extend(conversion_errors)
-            processed_images += processed
-            batch_data.clear()
-            batch_file_names.clear()
+            batch_data = []
+            batch_file_names = []
+            errors = []
 
-        for file_name, binary_data in tqdm(file_data.items(), desc="Processing images", total=total_images):
-            if file_name.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.tif', '.tiff', '.webp')):
-                batch_data.append(binary_data)
-                batch_file_names.append(file_name)
+            def process_batch(batch_data, batch_file_names):
+                nonlocal processed_images
+                batch_image_data, processed, conversion_errors = process_and_append_images(batch_data, batch_file_names, model, preprocess, device, zip_file_path)
+                image_data.extend(batch_image_data)
+                errors.extend(conversion_errors)
+                processed_images += processed
+                batch_data.clear()
+                batch_file_names.clear()
 
-                if len(batch_data) == batch_size:
-                    process_batch(batch_data, batch_file_names)
+            for file_name, binary_data in tqdm(file_data.items(), desc="Processing images", total=total_images):
+                if file_name.lower().endswith(('.gif','.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.tif', '.tiff', '.webp')):
+                    batch_data.append(binary_data)
+                    batch_file_names.append(file_name)
 
-        if batch_data:
-            process_batch(batch_data, batch_file_names)
+                    if len(batch_data) == batch_size:
+                        process_batch(batch_data, batch_file_names)
 
-        end_time = time.time()
-        total_time = end_time - start_time
-        clip_time = total_time - unzip_time
+            if batch_data:
+                process_batch(batch_data, batch_file_names)
 
-        mb_s = sum(len(binary_data) for binary_data in file_data.values()) / (clip_time * 1024 * 1024)
-        img_s = processed_images / clip_time
+            end_time = time.time()
+            total_time = end_time - start_time
+            clip_time = total_time - unzip_time
 
-        total_mb = sum(len(binary_data) for binary_data in file_data.values()) / (1024 * 1024)
-        total_gb = total_mb / 1024
+            mb_s = sum(len(binary_data) for binary_data in file_data.values()) / (clip_time * 1024 * 1024)
+            img_s = processed_images / clip_time
 
-        # calculate M/S
-        ms = zip_file_size / unzip_time
+            total_mb = sum(len(binary_data) for binary_data in file_data.values()) / (1024 * 1024)
+            total_gb = total_mb / 1024
 
-        print(f"Reading/uncompressing zip files took {unzip_time:.2f} seconds.")
-        print(f"Processed {processed_images} images in {clip_time:.2f} seconds. ({img_s:.2f} images/s, {mb_s:.2f} MB/s)")
-        print(f"Total GB processed: {total_gb:.2f} GB")
-        print(f"Zip file processed at {ms:.2f} MB/s")
+            # calculate M/S
+            ms = zip_file_size / unzip_time
 
-        output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}.json")
-        with open(output_json_file, 'w') as f:
-            json.dump(image_data, f, indent=4)
-        if errors:
-            error_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}_errors.txt")
-            with open(error_file, 'w') as f:
-                for error in errors:
-                    f.write(f"{error[1]}: {error[2]}\n")
+            print(f"Reading/uncompressing zip files took {unzip_time:.2f} seconds.")
+            print(f"Processed {processed_images} images in {clip_time:.2f} seconds. ({img_s:.2f} images/s, {mb_s:.2f} MB/s)")
+            print(f"Total GB processed: {total_gb:.2f} GB")
+            print(f"Zip file processed at {ms:.2f} MB/s")
 
+
+            output_json_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}.json")
+            with open(output_json_file, 'w') as f:
+                json.dump(image_data, f, indent=4)
+            if errors:
+                error_file = os.path.join(output_directory, f"{os.path.splitext(os.path.basename(file))[0]}_errors.txt")
+                with open(error_file, 'w') as f:
+                    for error in errors:
+                        f.write(f"{error[1]}: {error[2]}\n")
+
+        # Start loading the next zip file into memory
+        thread = threading.Thread(target=load_zip_to_ram_threaded, args=(zip_file_path, file_data_dict))
+        thread.start()
+        threads[zip_file_path] = thread
+        previous_zip_file_path = zip_file_path
+
+    # Make sure the last zip file is loaded into memory
+    threads[previous_zip_file_path].join()
 
     print("Finish process")
+
 
 '''
 parser = argparse.ArgumentParser(description='Generate CLIP vectors for images in a directory of zip files.')
