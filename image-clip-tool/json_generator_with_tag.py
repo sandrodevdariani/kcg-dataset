@@ -88,7 +88,10 @@ def clip_json_generator(input_directory, output_directory, batch_size):
         zip_file_path = os.path.join(input_directory, file)
         file_data = open_zip_to_ram(zip_file_path)
 
-        for folder_name, folder_data in file_data.items():
+    for folder_name, folder_data in file_data.items():
+        folder_images = open_zip_to_ram(io.BytesIO(folder_data))
+
+        for image_name, image_data in folder_images.items():
             image_data = []
             tag = folder_name  # Set the folder name as the tag
 
