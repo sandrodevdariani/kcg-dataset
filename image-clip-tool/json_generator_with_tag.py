@@ -56,8 +56,7 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
     converted_images, conversion_errors = convert_images(batch_data)
     image_hashes = compute_sha256(batch_data)
     clip_vectors = process_images(converted_images, model, preprocess, device)
-    tag = os.path.basename(os.path.dirname(zip_file_path))  # Extract the folder name as the tag
-
+    tag = os.path.basename(os.path.dirname(os.path.dirname(zip_file_path)))  # Extract the folder name as the tag
 
     for idx, (file_name, hash_value, clip_vector) in enumerate(zip(file_names, image_hashes, clip_vectors)):
         if idx not in [error[0] for error in conversion_errors]:
@@ -76,6 +75,7 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
     conversion_errors = [(idx, file_names[idx], error) for idx, error in conversion_errors]
 
     return image_data, len(batch_data), conversion_errors
+
 
 
 
