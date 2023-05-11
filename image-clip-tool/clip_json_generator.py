@@ -59,10 +59,12 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
 
     for idx, (file_name, hash_value, clip_vector) in enumerate(zip(file_names, image_hashes, clip_vectors)):
         if idx not in [error[0] for error in conversion_errors]:
+            file_path = os.path.join(zip_file_path, file_name)
+            dir_path = os.path.dirname(file_path)
             image_data.append({
-                'zipfile': os.path.basename(zip_file_path),
-                'filename': file_name,
-                'path/filename': os.path.join(zip_file_path, '/', file_name),
+                'file_archive': os.path.basename(zip_file_path),
+                'file_name': file_name,
+                'file_path': dir_path,
                 'file_hash': hash_value,
                 'clip_model': model_name,
                 'clip_vector': clip_vector
@@ -71,6 +73,7 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
     conversion_errors = [(idx, file_names[idx], error) for idx, error in conversion_errors]
 
     return image_data, len(batch_data), conversion_errors
+
 
 def load_zip_to_ram_threaded(zip_file_path, file_data_dict):
     file_data_dict[zip_file_path] = open_zip_to_ram(zip_file_path)
@@ -174,7 +177,7 @@ def clip_json_generator(input_directory, output_directory, batch_size):
     print("Finish process")
 
 
-'''
+
 parser = argparse.ArgumentParser(description='Generate CLIP vectors for images in a directory of zip files.')
 parser.add_argument('input_directory', type=str, help='Path to directory containing zip files')
 parser.add_argument('output_directory', type=str, help='Path to directory where output JSON files will be saved')
@@ -183,4 +186,3 @@ parser.add_argument('batch_size', type=int)
 args = parser.parse_args()
 
 clip_json_generator(args.input_directory, args.output_directory, args.batch_size)
-'''
