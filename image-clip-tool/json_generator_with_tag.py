@@ -7,6 +7,7 @@ import clip
 import torch
 from tqdm import tqdm
 import io
+import argparse
 
 
 model_name = "ViT-L/14"
