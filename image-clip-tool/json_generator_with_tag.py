@@ -56,12 +56,12 @@ def process_and_append_images(batch_data, file_names, model, preprocess, device,
     converted_images, conversion_errors = convert_images(batch_data)
     image_hashes = compute_sha256(batch_data)
     clip_vectors = process_images(converted_images, model, preprocess, device)
-    tag = os.path.basename(os.path.dirname(os.path.dirname(zip_file_path)))  # Extract the folder name as the tag
 
     for idx, (file_name, hash_value, clip_vector) in enumerate(zip(file_names, image_hashes, clip_vectors)):
         if idx not in [error[0] for error in conversion_errors]:
             file_path = os.path.join(zip_file_path, file_name)
             dir_path = os.path.dirname(file_path)
+            tag = os.path.basename(dir_path)  # Extract the directory name as the tag
             image_data.append({
                 'file_archive': os.path.basename(zip_file_path),
                 'file_name': file_name,
